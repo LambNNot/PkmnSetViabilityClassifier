@@ -1,3 +1,5 @@
+
+
 package ItemsetClasses;
 
 public record Rule(ItemSet left, ItemSet right) {
