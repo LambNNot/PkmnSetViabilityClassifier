@@ -10,6 +10,7 @@ public class RandomForest {
     private Random rand;
 
     public RandomForest(int numTrees) {
+        
         this.numTrees = numTrees;
         this.trees = new ArrayList<>();
         this.rand = new Random();
