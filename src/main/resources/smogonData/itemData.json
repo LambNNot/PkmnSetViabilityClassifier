@@ -1114,7 +1114,7 @@
   },
   {
     "name": "Dream Ball",
-    "description": "A Poke Ball that makes it easier to catch wild Pok\u00c3\u00a9mon while they're asleep.",
+    "description": "A Poke Ball that makes it easier to catch wild Pok\u00e9mon while they're asleep.",
     "isNonstandard": "Standard",
     "genfamily": [
       "BW",
@@ -2385,7 +2385,7 @@
   },
   {
     "name": "Leek",
-    "description": "If held by a Farfetch\u00e2\u20ac\u2122d or Sirfetch\u00e2\u20ac\u2122d, its critical hit ratio is raised by 2 stages.",
+    "description": "If held by a Farfetch\u2019d or Sirfetch\u2019d, its critical hit ratio is raised by 2 stages.",
     "isNonstandard": "NatDex",
     "genfamily": [
       "SS",
@@ -4561,7 +4561,7 @@
   },
   {
     "name": "Stick",
-    "description": "If held by a Farfetch\u00e2\u20ac\u2122d, its critical hit ratio is raised by 2 stages.",
+    "description": "If held by a Farfetch\u2019d, its critical hit ratio is raised by 2 stages.",
     "isNonstandard": "NatDex",
     "genfamily": [
       "GS",

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, model_validator, field_validator
-import monTypes
+import src.main.resources.smogonData.monTypes as monTypes
 
 class Pokemon(BaseModel):
     base_hp : int 

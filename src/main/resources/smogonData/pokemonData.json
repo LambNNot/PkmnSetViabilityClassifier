@@ -37,6 +37,81 @@
     }
   },
   {
+    "name": "Duohm",
+    "hp": 88,
+    "atk": 40,
+    "def": 103,
+    "spa": 77,
+    "spd": 60,
+    "spe": 60,
+    "weight": 19.2,
+    "height": 1.1,
+    "types": [
+      "Electric",
+      "Dragon"
+    ],
+    "abilities": [
+      "Shield Dust",
+      "Static",
+      "Damp"
+    ],
+    "formats": [],
+    "isNonstandard": "CAP",
+    "oob": {
+      "dex_number": -63,
+      "evos": [
+        "Cyclohm"
+      ],
+      "alts": [],
+      "genfamily": [
+        "DP",
+        "BW",
+        "XY",
+        "SM",
+        "SS",
+        "SV"
+      ]
+    }
+  },
+  {
+    "name": "Ditto",
+    "hp": 48,
+    "atk": 48,
+    "def": 48,
+    "spa": 48,
+    "spd": 48,
+    "spe": 48,
+    "weight": 4,
+    "height": 0.3,
+    "types": [
+      "Normal"
+    ],
+    "abilities": [
+      "Limber",
+      "Imposter"
+    ],
+    "formats": [
+      "ZU"
+    ],
+    "isNonstandard": "Standard",
+    "oob": {
+      "dex_number": 132,
+      "evos": [],
+      "alts": [],
+      "genfamily": [
+        "RB",
+        "GS",
+        "RS",
+        "DP",
+        "BW",
+        "XY",
+        "SM",
+        "SS",
+        "SV"
+      ]
+    }
+  },
+  {
     "name": "Tactite",
     "hp": 70,
     "atk": 40,
@@ -2064,43 +2139,6 @@
     }
   },
   {
-    "name": "Duohm",
-    "hp": 88,
-    "atk": 40,
-    "def": 103,
-    "spa": 77,
-    "spd": 60,
-    "spe": 60,
-    "weight": 19.2,
-    "height": 1.1,
-    "types": [
-      "Electric",
-      "Dragon"
-    ],
-    "abilities": [
-      "Shield Dust",
-      "Static",
-      "Damp"
-    ],
-    "formats": [],
-    "isNonstandard": "CAP",
-    "oob": {
-      "dex_number": -63,
-      "evos": [
-        "Cyclohm"
-      ],
-      "alts": [],
-      "genfamily": [
-        "DP",
-        "BW",
-        "XY",
-        "SM",
-        "SS",
-        "SV"
-      ]
-    }
-  },
-  {
     "name": "Dorsoil",
     "hp": 103,
     "atk": 72,
@@ -3557,7 +3595,7 @@
       "Sturdy"
     ],
     "formats": [
-      "UU"
+      "UUBL"
     ],
     "isNonstandard": "Standard",
     "oob": {
@@ -5469,44 +5507,6 @@
       "alts": [
         "Lapras-Gmax"
       ],
-      "genfamily": [
-        "RB",
-        "GS",
-        "RS",
-        "DP",
-        "BW",
-        "XY",
-        "SM",
-        "SS",
-        "SV"
-      ]
-    }
-  },
-  {
-    "name": "Ditto",
-    "hp": 48,
-    "atk": 48,
-    "def": 48,
-    "spa": 48,
-    "spd": 48,
-    "spe": 48,
-    "weight": 4,
-    "height": 0.3,
-    "types": [
-      "Normal"
-    ],
-    "abilities": [
-      "Limber",
-      "Imposter"
-    ],
-    "formats": [
-      "ZU"
-    ],
-    "isNonstandard": "Standard",
-    "oob": {
-      "dex_number": 132,
-      "evos": [],
-      "alts": [],
       "genfamily": [
         "RB",
         "GS",
@@ -40750,7 +40750,7 @@
       "Ice Scales"
     ],
     "formats": [
-      "PU"
+      "PUBL"
     ],
     "isNonstandard": "Standard",
     "oob": {
@@ -41682,7 +41682,7 @@
       "Leaf Guard"
     ],
     "formats": [
-      "UU"
+      "UUBL"
     ],
     "isNonstandard": "Standard",
     "oob": {
@@ -41713,7 +41713,7 @@
       "Leaf Guard"
     ],
     "formats": [
-      "UU"
+      "UUBL"
     ],
     "isNonstandard": "Standard",
     "oob": {
@@ -46174,30 +46174,6 @@
     "oob": null
   },
   {
-    "name": "Charizard-Gmax",
-    "hp": 78,
-    "atk": 84,
-    "def": 78,
-    "spa": 109,
-    "spd": 85,
-    "spe": 100,
-    "weight": 0,
-    "height": 28,
-    "types": [
-      "Fire",
-      "Flying"
-    ],
-    "abilities": [
-      "Blaze",
-      "Solar Power"
-    ],
-    "formats": [
-      "National Dex"
-    ],
-    "isNonstandard": "NatDex",
-    "oob": null
-  },
-  {
     "name": "Lapras-Gmax",
     "hp": 130,
     "atk": 85,
@@ -46215,6 +46191,30 @@
       "Water Absorb",
       "Shell Armor",
       "Hydration"
+    ],
+    "formats": [
+      "National Dex"
+    ],
+    "isNonstandard": "NatDex",
+    "oob": null
+  },
+  {
+    "name": "Charizard-Gmax",
+    "hp": 78,
+    "atk": 84,
+    "def": 78,
+    "spa": 109,
+    "spd": 85,
+    "spe": 100,
+    "weight": 0,
+    "height": 28,
+    "types": [
+      "Fire",
+      "Flying"
+    ],
+    "abilities": [
+      "Blaze",
+      "Solar Power"
     ],
     "formats": [
       "National Dex"
@@ -46287,7 +46287,7 @@
       "Embody Aspect (Cornerstone)"
     ],
     "formats": [
-      "UU"
+      "UUBL"
     ],
     "isNonstandard": "Standard",
     "oob": null
@@ -46568,29 +46568,6 @@
     "oob": null
   },
   {
-    "name": "Gallade-Mega",
-    "hp": 68,
-    "atk": 165,
-    "def": 95,
-    "spa": 65,
-    "spd": 115,
-    "spe": 110,
-    "weight": 56.4,
-    "height": 1.6,
-    "types": [
-      "Psychic",
-      "Fighting"
-    ],
-    "abilities": [
-      "Inner Focus"
-    ],
-    "formats": [
-      "National Dex"
-    ],
-    "isNonstandard": "NatDex",
-    "oob": null
-  },
-  {
     "name": "Mimikyu-Busted",
     "hp": 55,
     "atk": 90,
@@ -46611,6 +46588,29 @@
       "RU"
     ],
     "isNonstandard": "Standard",
+    "oob": null
+  },
+  {
+    "name": "Gallade-Mega",
+    "hp": 68,
+    "atk": 165,
+    "def": 95,
+    "spa": 65,
+    "spd": 115,
+    "spe": 110,
+    "weight": 56.4,
+    "height": 1.6,
+    "types": [
+      "Psychic",
+      "Fighting"
+    ],
+    "abilities": [
+      "Inner Focus"
+    ],
+    "formats": [
+      "National Dex"
+    ],
+    "isNonstandard": "NatDex",
     "oob": null
   },
   {
@@ -47669,29 +47669,6 @@
     "oob": null
   },
   {
-    "name": "Copperajah-Gmax",
-    "hp": 122,
-    "atk": 130,
-    "def": 69,
-    "spa": 80,
-    "spd": 69,
-    "spe": 30,
-    "weight": 0,
-    "height": 23,
-    "types": [
-      "Steel"
-    ],
-    "abilities": [
-      "Sheer Force",
-      "Heavy Metal"
-    ],
-    "formats": [
-      "National Dex"
-    ],
-    "isNonstandard": "NatDex",
-    "oob": null
-  },
-  {
     "name": "Eevee-Gmax",
     "hp": 55,
     "atk": 55,
@@ -47708,6 +47685,29 @@
       "Run Away",
       "Adaptability",
       "Anticipation"
+    ],
+    "formats": [
+      "National Dex"
+    ],
+    "isNonstandard": "NatDex",
+    "oob": null
+  },
+  {
+    "name": "Copperajah-Gmax",
+    "hp": 122,
+    "atk": 130,
+    "def": 69,
+    "spa": 80,
+    "spd": 69,
+    "spe": 30,
+    "weight": 0,
+    "height": 23,
+    "types": [
+      "Steel"
+    ],
+    "abilities": [
+      "Sheer Force",
+      "Heavy Metal"
     ],
     "formats": [
       "National Dex"
