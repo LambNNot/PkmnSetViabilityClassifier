@@ -1,23 +1,28 @@
 import json
+import requests
+from bs4 import BeautifulSoup
 
-# Parse data
-with open('smogonData.json', 'r') as file:
-    smogonData:dict  = json.load(file)
+URL = "https://www.smogon.com/dex/sv/pokemon/"
 
-smogonData = smogonData['injectRpcs']
-genData, smogonData = smogonData[0], smogonData[1]
-smogonData = smogonData[1]
-pokemonData = smogonData['pokemon']
-formatData = smogonData['formats']
-natureData = smogonData['natures']
-abilityData = smogonData['abilities']
-moveFlags = smogonData['moveflags']
-moveData = smogonData['moves']
-typeData = smogonData['types']
-itemData = smogonData['items']
+if __name__ == "__main__":
+    response = requests.get(URL)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-print(smogonData['pokemon'])
-print(len(pokemonData))
+    dex_script = soup.find('script', type='text/javascript')
+    script_text:str = dex_script.text
+
+    json_start = script_text.find("{")
+    parsed_dex_settings:dict = json.loads(script_text[json_start:])
+    
+    smogonData = parsed_dex_settings.get('injectRpcs')[1][1]
+    pokemonData = smogonData['pokemon']
+    formatData = smogonData['formats']
+    natureData = smogonData['natures']
+    abilityData = smogonData['abilities']
+    moveFlags = smogonData['moveflags']
+    moveData = smogonData['moves']
+    typeData = smogonData['types']
+    itemData = smogonData['items']
 
 # Write pokemon data
 with open("pokemonData.json" , 'w') as f:

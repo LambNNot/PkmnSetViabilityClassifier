@@ -1,31 +1,47 @@
 from bs4 import BeautifulSoup
 import requests
 import json
+from time import sleep
+from typing import List
 
-response = requests.get("https://www.smogon.com/dex/sv/pokemon/abomasnow/")
+RELEVANT_FORMATS = ["ZU", "PU", "NU", "RU", "NU", "OU", "Uber", "AG"]
 
-soup = BeautifulSoup(response.content, 'html.parser')
+def getAllStandardMons() -> List[str]:
+    with open('smogonData/pokemonData.json', 'r') as f:
+        pkmn_data = json.load(f)
 
-dex_script = soup.find('script', type='text/javascript')
-script_text:str = dex_script.text
+    return [pkmn.get('name') for pkmn in pkmn_data if pkmn.get('isNonstandard') == "Standard"]
 
-json_start = script_text.find("{")
+def getStrats(pokemon: str) -> List[dict]:
+    """
+    Scrape documented strategies of a given pokemon from Smogon for relevant formats.
+    Strategy written descriptions are modified to be blank for data processing.
+    """
+    response = requests.get(f"https://www.smogon.com/dex/sv/pokemon/{pkmn.lower()}/")
 
-parsed_dex_settings:dict = json.loads(script_text[json_start:])
-# print(parsed_dex_settings.keys())
-# print(len(parsed_dex_settings.get('injectRpcs')[2]))
-pkmn_dump:dict = parsed_dex_settings.get('injectRpcs')[2][1]
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-# print(pkmn_dump.keys())
-strategies:list = pkmn_dump.get('strategies')
+    dex_script = soup.find('script', type='text/javascript')
+    script_text:str = dex_script.text
 
-relevant_formats = ["ZU", "PU", "NU", "RU", "NU", "OU", "Uber", "AG"]
+    json_start = script_text.find("{")
+    parsed_dex_settings:dict = json.loads(script_text[json_start:])
+    pkmn_dump:dict = parsed_dex_settings.get('injectRpcs')[2][1]
+    strategies:list = pkmn_dump.get('strategies')
 
-for strat in strategies:
-    strat:dict
-    #print(f"\n-----\n{strat}")
-    #print(f"\n{strat.get('format')} --> {strat.get('movesets')}")
-    if strat.get('format') in relevant_formats:
-        print(f"\n-----\n{strat.get('movesets')}")
-    else:
-        print(f"\n-----\nIRRELEVANT STRAT DETECT: {strat.get("format")}")
+    for strat in strategies:
+        strat:dict
+        if strat.get('format') in RELEVANT_FORMATS:
+            for set in strat.get('movesets'):
+                set:dict
+                set.update({'description' : ''})
+                # print(f"\n-----\nFormat: {strat.get('format')}\n{set}")
+
+if __name__ == "__main__":
+    # Load all saved Standard Pokemon
+    standardMons = getAllStandardMons()
+    print(len(standardMons))
+
+    # Clean Pokemon Forms
+
+    # Actual Scraping Logic
