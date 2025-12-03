@@ -7,7 +7,7 @@ from typing import List
 RELEVANT_FORMATS = ["ZU", "PU", "NU", "RU", "NU", "OU", "Uber", "AG"]
 
 def getAllStandardMons() -> List[str]:
-    with open('smogonData/pokemonData.json', 'r') as f:
+    with open('src/main/resources/smogonData/pokemonData.json', 'r') as f:
         pkmn_data = json.load(f)
 
     return [pkmn.get('name') for pkmn in pkmn_data if pkmn.get('isNonstandard') == "Standard"]
@@ -16,8 +16,12 @@ def getStrats(pokemon: str) -> List[dict]:
     """
     Scrape documented strategies of a given pokemon from Smogon for relevant formats.
     Strategy written descriptions are modified to be blank for data processing.
+    Formats are appended to strategies for classification.
     """
-    response = requests.get(f"https://www.smogon.com/dex/sv/pokemon/{pkmn.lower()}/")
+    print(f"Fetching strats for {pokemon}...")
+    response = requests.get(f"https://www.smogon.com/dex/sv/pokemon/{pokemon.lower()}/")
+    if (response.status_code != 200):
+        raise RuntimeError("Scraping failed")
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -29,19 +33,42 @@ def getStrats(pokemon: str) -> List[dict]:
     pkmn_dump:dict = parsed_dex_settings.get('injectRpcs')[2][1]
     strategies:list = pkmn_dump.get('strategies')
 
+    results = []
+
     for strat in strategies:
         strat:dict
         if strat.get('format') in RELEVANT_FORMATS:
             for set in strat.get('movesets'):
                 set:dict
                 set.update({'description' : ''})
+                set.update({'format' : strat.get('format')})
+                results.append(set)
                 # print(f"\n-----\nFormat: {strat.get('format')}\n{set}")
 
+    return results
+
 if __name__ == "__main__":
+    
     # Load all saved Standard Pokemon
     standardMons = getAllStandardMons()
-    print(len(standardMons))
+    count = len(standardMons)
+    # print(standardMons)
 
-    # Clean Pokemon Forms
+    # Note: We are NOT cleaning duplicates as of the moment.
+    #       Different forms may contribute multiple times to the dataset.
 
-    # Actual Scraping Logic
+    sets = []
+    counter = 0
+    for mon in standardMons:
+        print(f"{count - counter}: ", end="")
+        sets.extend(getStrats(mon))
+        counter += 1
+
+    with open('src/main/resources/smogonData/sets.json', 'w') as f:
+        f.write(json.dumps(sets, indent=2))
+    
+    # # Actual Scraping Logic
+    # print(getStrats("Ogerpon-Hearthflame-Tera"))
+    # print(getStrats("Ogerpon-Hearthflame"))
+
+
