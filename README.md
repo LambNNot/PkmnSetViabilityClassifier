@@ -46,7 +46,7 @@ Every dual-type pair is encoded as a numerical id. Mono-type Pokemon are treated
 Encoded as:
 
 ```
-0 for Genderless
+0 for DC (Does not matter)
 1 for Female
 2 for Male
 ```
@@ -85,8 +85,7 @@ Since our data must be categorical, each Pokemon's moveset will be abstracted in
 8. hasSetUp (Binary)
 9. hasHazards (Binary)
 10. hasRemoval (Binary)
-
-
+11. hasStatus (Binary)
 
 #### 9. EVs
 
