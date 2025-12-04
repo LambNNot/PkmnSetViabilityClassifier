@@ -1,0 +1,1 @@
+"""This file decodes some of the categorical data, including types, items, abilities"""
