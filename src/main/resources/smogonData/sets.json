@@ -39260,7 +39260,10 @@
       }
     ],
     "ivconfigs": [],
-    "natures": [],
+    "natures": [
+      "Careful",
+      "Jolly"
+    ],
     "format": "ZU"
   },
   {
@@ -58487,7 +58490,10 @@
     "items": [
       "Rusted Shield"
     ],
-    "teratypes": [],
+    "teratypes": [
+      "Dark",
+      "Steel"
+    ],
     "moveslots": [
       [
         {
