@@ -1,5 +1,7 @@
 import json
+import pandas as pd
 
-with open('src/main/resources/smogonData/sets.json', 'r') as f:
-    allSets = json.load(f)
+allSets = pd.read_json('src/main/resources/smogonData/sets.json')
 print(len(allSets))
+print(allSets.columns)
+
