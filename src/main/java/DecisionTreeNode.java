@@ -1,11 +1,15 @@
 import java.util.HashMap;
+import java.util.Map;
+
+
+
 
 public class DecisionTreeNode {
     private final boolean isLeaf;
     private int classValue; // use if isLeaf = true
 
     private int attribute; // use if decision node, split on this attribute
-    private HashMap<Integer, DecisionTreeNode> children; // attribute value, list of children
+    private HashMap<Integer, DecisionTreeNode> children; // attribute value -> child node
 
     // leaf node
     public DecisionTreeNode(int classValue) {
@@ -15,10 +19,10 @@ public class DecisionTreeNode {
     }
 
     // decision node
-    public DecisionTreeNode(int attribute, HashMap<Integer, DecisionTreeNode> children) {
+    public DecisionTreeNode(int attribute, Map<Integer, DecisionTreeNode> children) {
         this.isLeaf = false;
         this.attribute = attribute;
-        this.children = children;
+        this.children = new HashMap<>(children);
     }
 
     public boolean isLeaf() {
@@ -38,27 +42,24 @@ public class DecisionTreeNode {
     }
 
     public int predict(int[] instance) {
-        //if leaf node return class
+        // if leaf node, return class (no print)
         if (isLeaf) {
-            System.out.println("prediction: " + classValue);
             return classValue;
         }
 
-        // else get attributes value
+        // get attribute value
         int attributeValue = instance[attribute];
 
-        // if there is a child with the value follow it
+        // follow child if exists
         if (children.containsKey(attributeValue)) {
             return children.get(attributeValue).predict(instance);
         }
 
-        // if the value was never seen during training,
-        // fall back to the most common child or majority class
+        // fallback if unseen attribute value
         return fallbackClass();
     }
 
     private int fallbackClass() {
-        // majority vote among children
         HashMap<Integer, Integer> counts = new HashMap<>();
         for (DecisionTreeNode child : children.values()) {
             int c = child.classValue;
@@ -75,6 +76,4 @@ public class DecisionTreeNode {
         }
         return best;
     }
-
 }
-
