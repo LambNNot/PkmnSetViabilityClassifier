@@ -39,7 +39,8 @@ Every stat is encoded into 4 categories:
 
 #### 2. Type
 
-Every dual-type pair is encoded as a numerical id. Mono-type Pokemon are treated as a dual-type where both types are the same.
+Every Pokemon has 1-2 types. Every type is encoded such that the order of the types are irrelevant.
+Each of the 19 types (Base + Stellar) are associated with one of the first 19 prime numbers. A Pokemon's type encoding is equal to the product of the Prime encoding of their numbers. All mono-type Pokemon are treated to be dual-types with the same type twice.
 
 #### 3. Gender (0-2)
 
