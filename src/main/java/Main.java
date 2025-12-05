@@ -4,7 +4,7 @@ import java.util.Map.Entry;
 public class Main {
     public static void main(String[] args) throws Exception {
         // 1. Load CSV
-        CSVLoader.LoadedData data = CSVLoader.loadCSV("src/main/cleaneddata.csv");
+        CSVLoader.LoadedData data = CSVLoader.loadCSV("src/main/cleanedExpandedData.csv");
         int[][] X = data.X;
         int[] y = data.y;
 
