@@ -1,15 +1,11 @@
 import java.util.HashMap;
 import java.util.Map;
 
-
-
-
 public class DecisionTreeNode {
     private final boolean isLeaf;
     private int classValue; // use if isLeaf = true
-
-    private int attribute; // use if decision node, split on this attribute
-    private HashMap<Integer, DecisionTreeNode> children; // attribute value -> child node
+    private int attribute; // use if decision node
+    private HashMap<Integer, DecisionTreeNode> children; // attribute value -> child
 
     // leaf node
     public DecisionTreeNode(int classValue) {
@@ -42,20 +38,13 @@ public class DecisionTreeNode {
     }
 
     public int predict(int[] instance) {
-        // if leaf node, return class (no print)
         if (isLeaf) {
             return classValue;
         }
-
-        // get attribute value
         int attributeValue = instance[attribute];
-
-        // follow child if exists
         if (children.containsKey(attributeValue)) {
             return children.get(attributeValue).predict(instance);
         }
-
-        // fallback if unseen attribute value
         return fallbackClass();
     }
 
@@ -65,9 +54,7 @@ public class DecisionTreeNode {
             int c = child.classValue;
             counts.put(c, counts.getOrDefault(c, 0) + 1);
         }
-
-        int best = -1;
-        int bestCount = -1;
+        int best = -1, bestCount = -1;
         for (int c : counts.keySet()) {
             if (counts.get(c) > bestCount) {
                 bestCount = counts.get(c);
