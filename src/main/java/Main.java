@@ -41,15 +41,19 @@ public class Main {
         int[] ytest = Arrays.copyOfRange(yshuffled, trainSize, y.length);
 
         // 5. Train RandomForest
-        RandomForest rf = new RandomForest(300, 20, 5);
+        RandomForest rf = new RandomForest(300, 20, 5); 
         rf.fit(Xtrain, ytrain);
+
+        // Print first decision tree
+        System.out.println("\nFirst decision tree in the RandomForest:");
+        RandomForest.printTree(rf.getTrees().get(0), "", CSVLoader.reverseLabelMap);
 
         // 6. Evaluate predictions
         int numClasses = CSVLoader.reverseLabelMap.size();
         int[][] confusion = new int[numClasses][numClasses];
 
         for (int i = 0; i < Xtest.length; i++) {
-            int pred = rf.predict(Xtest[i]); // majority-vote prediction
+            int pred = rf.predict(Xtest[i]);
             int actual = ytest[i];
             confusion[actual][pred]++;
         }
@@ -78,8 +82,8 @@ public class Main {
                     CSVLoader.reverseLabelMap.get(c), precision, recall, f1);
         }
 
-        // 9. Sample majority-vote predictions
-        System.out.println("\nSample majority-vote predictions:");
+        // 9. Sample majority-vote predictions on test set
+        System.out.println("\nSample test set predictions:");
         for (int i = 0; i < Math.min(5, Xtest.length); i++) {
             int pred = rf.predict(Xtest[i]);
             int actual = ytest[i];
@@ -88,9 +92,27 @@ public class Main {
                 + CSVLoader.reverseLabelMap.get(actual));
         }
 
-        // 10. Training set distribution
+        
+        System.out.println("\nPredicting new Pokémon sets:");
+        int[][] newSets = new int[][] {
+            { /* fill in features for new set 1 */ },
+            { /* fill in features for new set 2 */ }
+        };
+
+        for (int i = 0; i < newSets.length; i++) {
+            String tier = predictSet(rf, newSets[i]);
+            System.out.println("New Set " + i + " -> Predicted tier: " + tier);
+        }
+
+        // 11. Training set distribution
         Map<Integer, Integer> countsTrain = new HashMap<>();
         for (int label : ytrain) countsTrain.put(label, countsTrain.getOrDefault(label, 0) + 1);
         System.out.println("\nTraining set distribution: " + countsTrain);
+    }
+
+    // Helper method to predict a single Pokémon set
+    public static String predictSet(RandomForest rf, int[] features) {
+        int pred = rf.predict(features);
+        return CSVLoader.reverseLabelMap.get(pred);
     }
 }
