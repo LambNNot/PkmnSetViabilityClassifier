@@ -1,22 +1,14 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-
+import java.util.*;
+import java.util.Map.Entry;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-
         // 1. Load CSV
         CSVLoader.LoadedData data = CSVLoader.loadCSV("src/main/cleaneddata.csv");
         int[][] X = data.X;
         int[] y = data.y;
 
-        // 2. Print total counts per class
+        // 2. Print class distribution
         Map<Integer, Integer> countsTotal = new HashMap<>();
         for (int label : y) countsTotal.put(label, countsTotal.getOrDefault(label, 0) + 1);
         System.out.println("Class distribution: " + countsTotal);
@@ -40,31 +32,82 @@ public class Main {
         int[][] Xtest = Arrays.copyOfRange(Xshuffled, trainSize, X.length);
         int[] ytest = Arrays.copyOfRange(yshuffled, trainSize, y.length);
 
-        // 5. Train RandomForest
-        RandomForest rf = new RandomForest(300, 20, 5); 
-        rf.fit(Xtrain, ytrain);
+        // 5. 10-fold CV to select best number of trees
+        int[] treeOptions = {50, 100, 200, 300};
+        int kFolds = 10, maxDepth = 20, minSamplesSplit = 5;
+        Map<Integer, Double> avgAccuracy = new HashMap<>();
 
-        // Print first decision tree
-        System.out.println("\nFirst decision tree in the RandomForest:");
-        RandomForest.printTree(rf.getTrees().get(0), "", CSVLoader.reverseLabelMap);
+        // Generate shuffled indices for CV on training set
+        List<Integer> trainIndices = new ArrayList<>();
+        for (int i = 0; i < Xtrain.length; i++) trainIndices.add(i);
+        Collections.shuffle(trainIndices, new Random(42));
 
-        // 6. Evaluate predictions
+        int foldSize = Xtrain.length / kFolds;
+
+        for (int nTrees : treeOptions) {
+            double totalAcc = 0.0;
+
+            for (int fold = 0; fold < kFolds; fold++) {
+                List<Integer> testIdx = trainIndices.subList(fold * foldSize,
+                        fold == kFolds - 1 ? Xtrain.length : (fold + 1) * foldSize);
+                List<Integer> cvTrainIdx = new ArrayList<>(trainIndices);
+                cvTrainIdx.removeAll(testIdx);
+
+                int[][] XcvTrain = new int[cvTrainIdx.size()][Xtrain[0].length];
+                int[] ycvTrain = new int[cvTrainIdx.size()];
+                int[][] XcvTest = new int[testIdx.size()][Xtrain[0].length];
+                int[] ycvTest = new int[testIdx.size()];
+
+                for (int i = 0; i < cvTrainIdx.size(); i++) {
+                    XcvTrain[i] = Xtrain[cvTrainIdx.get(i)];
+                    ycvTrain[i] = ytrain[cvTrainIdx.get(i)];
+                }
+                for (int i = 0; i < testIdx.size(); i++) {
+                    XcvTest[i] = Xtrain[testIdx.get(i)];
+                    ycvTest[i] = ytrain[testIdx.get(i)];
+                }
+
+                RandomForest rf = new RandomForest(nTrees, maxDepth, minSamplesSplit);
+                rf.fit(XcvTrain, ycvTrain);
+
+                int correct = 0;
+                for (int i = 0; i < XcvTest.length; i++)
+                    if (rf.predict(XcvTest[i]) == ycvTest[i]) correct++;
+
+                totalAcc += correct / (double) XcvTest.length;
+            }
+
+            avgAccuracy.put(nTrees, totalAcc / kFolds);
+            System.out.printf("Trees: %d | 10-fold CV Accuracy: %.4f%n", nTrees, avgAccuracy.get(nTrees));
+        }
+
+        // Best number of trees
+        int bestTrees = avgAccuracy.entrySet().stream()
+                .max(Entry.comparingByValue())
+                .get()
+                .getKey();
+        System.out.println("\nBest number of trees: " + bestTrees);
+
+        // 6. Train final RandomForest on all training data
+        RandomForest finalRF = new RandomForest(bestTrees, maxDepth, minSamplesSplit);
+        finalRF.fit(Xtrain, ytrain);
+        System.out.println("Final model trained on all training data.");
+
+        // 7. Evaluate on test set
         int numClasses = CSVLoader.reverseLabelMap.size();
         int[][] confusion = new int[numClasses][numClasses];
 
         for (int i = 0; i < Xtest.length; i++) {
-            int pred = rf.predict(Xtest[i]);
+            int pred = finalRF.predict(Xtest[i]);
             int actual = ytest[i];
             confusion[actual][pred]++;
         }
 
-        // 7. Compute overall accuracy
         int correctTotal = 0;
         for (int i = 0; i < numClasses; i++) correctTotal += confusion[i][i];
         double accuracy = correctTotal / (double) Xtest.length;
-        System.out.println("\nAccuracy: " + accuracy);
+        System.out.println("\nTest Accuracy: " + accuracy);
 
-        // 8. Compute precision, recall, F1 for each class
         System.out.println("\nPrecision, Recall, F1 per class:");
         for (int c = 0; c < numClasses; c++) {
             int tp = confusion[c][c];
@@ -82,32 +125,15 @@ public class Main {
                     CSVLoader.reverseLabelMap.get(c), precision, recall, f1);
         }
 
-        // 9. Sample majority-vote predictions on test set
+        // 8. Sample predictions
         System.out.println("\nSample test set predictions:");
         for (int i = 0; i < Math.min(5, Xtest.length); i++) {
-            int pred = rf.predict(Xtest[i]);
+            int pred = finalRF.predict(Xtest[i]);
             int actual = ytest[i];
-            System.out.println("Sample " + i + " -> Predicted: " 
-                + CSVLoader.reverseLabelMap.get(pred) + ", Actual: " 
-                + CSVLoader.reverseLabelMap.get(actual));
+            System.out.println("Sample " + i + " -> Predicted: "
+                    + CSVLoader.reverseLabelMap.get(pred) + ", Actual: "
+                    + CSVLoader.reverseLabelMap.get(actual));
         }
-
-        
-        System.out.println("\nPredicting new Pokémon sets:");
-        int[][] newSets = new int[][] {
-            { /* fill in features for new set 1 */ },
-            { /* fill in features for new set 2 */ }
-        };
-
-        for (int i = 0; i < newSets.length; i++) {
-            String tier = predictSet(rf, newSets[i]);
-            System.out.println("New Set " + i + " -> Predicted tier: " + tier);
-        }
-
-        // 11. Training set distribution
-        Map<Integer, Integer> countsTrain = new HashMap<>();
-        for (int label : ytrain) countsTrain.put(label, countsTrain.getOrDefault(label, 0) + 1);
-        System.out.println("\nTraining set distribution: " + countsTrain);
     }
 
     // Helper method to predict a single Pokémon set
