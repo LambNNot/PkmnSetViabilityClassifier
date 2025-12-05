@@ -12,7 +12,12 @@ def getAllStandardMons():
 
 def getAllSets():
     print("Fetching all sets...")
-    with open('src/main/resources/smogonData/sets.json') as f:
+    with open('src/main/resources/smogonData/sets.json', 'r') as f:
+        return json.load(f)
+    
+def getExtraSets():
+    print("Fetching extra sets...")
+    with open('src/main/resources/extraData/extraSets.json', 'r') as f:
         return json.load(f)
     
 def getAllTypes():
