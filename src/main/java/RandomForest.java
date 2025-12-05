@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,133 +8,128 @@ import java.util.Random;
 public class RandomForest {
     private List<DecisionTreeNode> trees;
     private int numTrees;
+    private int maxDepth;
+    private int minSamplesSplit;
     private Random rand;
 
-    public RandomForest(int numTrees) {
-        
+    public RandomForest(int numTrees, int maxDepth, int minSamplesSplit) {
         this.numTrees = numTrees;
+        this.maxDepth = maxDepth;
+        this.minSamplesSplit = minSamplesSplit;
         this.trees = new ArrayList<>();
-        this.rand = new Random();
+        this.rand = new Random(42); // fixed seed for reproducibility
     }
 
-    /** Train the Random Forest on dataset X (features) and y (labels) */
     public void fit(int[][] X, int[] y) {
         int n = X.length;
+        int numAttributes = X[0].length;
 
         for (int t = 0; t < numTrees; t++) {
-            // 1. Create bootstrap sample
+            // Bootstrap sample
             int[][] XSample = new int[n][];
             int[] ySample = new int[n];
-
             for (int i = 0; i < n; i++) {
-                int idx = rand.nextInt(n); // random index with replacement
+                int idx = rand.nextInt(n);
                 XSample[i] = X[idx];
                 ySample[i] = y[idx];
             }
 
-            // 2. Build a decision tree from this sample
-            DecisionTreeNode tree = buildTree(XSample, ySample);
+            // Build tree
+            DecisionTreeNode tree = buildTree(XSample, ySample, 0, numAttributes);
             trees.add(tree);
         }
     }
 
-    /** Predict the label for a new instance using majority vote */
     public int predict(int[] instance) {
         Map<Integer, Integer> votes = new HashMap<>();
-
         for (DecisionTreeNode tree : trees) {
             int pred = tree.predict(instance);
             votes.put(pred, votes.getOrDefault(pred, 0) + 1);
         }
-
-        // Return the label with the most votes
-        int bestClass = -1;
-        int maxVotes = -1;
-        for (int cls : votes.keySet()) {
-            if (votes.get(cls) > maxVotes) {
-                maxVotes = votes.get(cls);
-                bestClass = cls;
-            }
-        }
-
-        return bestClass;
+        // Return class with most votes
+        return votes.entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .get().getKey();
     }
 
-    /** Recursively build a decision tree from data */
-    private DecisionTreeNode buildTree(int[][] X, int[] y) {
-        // Base case 1: all labels are the same → leaf node
-        if (allSameClass(y)) {
-            return new DecisionTreeNode(y[0]);
-        }
-
-        // Base case 2: no attributes left → majority class leaf
-        if (X[0].length == 0) {
+    private DecisionTreeNode buildTree(int[][] X, int[] y, int depth, int numAttributes) {
+        if (allSameClass(y) || depth >= maxDepth || y.length < minSamplesSplit)
             return new DecisionTreeNode(majorityClass(y));
-        }
 
-        // Randomly select an attribute to split on
-        int numAttributes = X[0].length;
-        int attribute = rand.nextInt(numAttributes);
+        // Random subset of attributes (sqrt rule)
+        int m = (int) Math.ceil(Math.sqrt(numAttributes));
+        List<Integer> attrs = new ArrayList<>();
+        for (int i = 0; i < numAttributes; i++) attrs.add(i);
+        Collections.shuffle(attrs, rand);
+        List<Integer> subset = attrs.subList(0, m);
 
-        // Group examples by attribute value
-        HashMap<Integer, List<Integer>> valueIndices = new HashMap<>();
-        for (int i = 0; i < X.length; i++) {
-            int val = X[i][attribute];
-            valueIndices.computeIfAbsent(val, k -> new ArrayList<>()).add(i);
-        }
-
-        // Recursively build child nodes
-        HashMap<Integer, DecisionTreeNode> children = new HashMap<>();
-        for (int val : valueIndices.keySet()) {
-            List<Integer> indices = valueIndices.get(val);
-            int[][] subX = new int[indices.size()][numAttributes - 1];
-            int[] subY = new int[indices.size()];
-
-            for (int i = 0; i < indices.size(); i++) {
-                int idx = indices.get(i);
-                subY[i] = y[idx];
-
-                // Remove the split attribute
-                int[] newRow = new int[numAttributes - 1];
-                int pos = 0;
-                for (int j = 0; j < numAttributes; j++) {
-                    if (j != attribute) {
-                        newRow[pos++] = X[idx][j];
-                    }
-                }
-                subX[i] = newRow;
+        // Pick best attribute by Gini
+        int bestAttr = -1;
+        double bestGini = Double.MAX_VALUE;
+        for (int attr : subset) {
+            double gini = giniForAttribute(X, y, attr);
+            if (gini < bestGini) {
+                bestGini = gini;
+                bestAttr = attr;
             }
-
-            children.put(val, buildTree(subX, subY));
         }
 
-        return new DecisionTreeNode(attribute, children);
+        // Group by attribute value
+        Map<Integer, List<Integer>> groups = new HashMap<>();
+        for (int i = 0; i < X.length; i++)
+            groups.computeIfAbsent(X[i][bestAttr], k -> new ArrayList<>()).add(i);
+
+        Map<Integer, DecisionTreeNode> children = new HashMap<>();
+        for (int val : groups.keySet()) {
+            List<Integer> rows = groups.get(val);
+            int[][] subX = new int[rows.size()][X[0].length];
+            int[] subY = new int[rows.size()];
+            for (int i = 0; i < rows.size(); i++) {
+                int idx = rows.get(i);
+                subX[i] = X[idx];
+                subY[i] = y[idx];
+            }
+            children.put(val, buildTree(subX, subY, depth + 1, numAttributes));
+        }
+
+        return new DecisionTreeNode(bestAttr, children);
     }
 
-    /** Helper: check if all labels are the same */
     private boolean allSameClass(int[] y) {
-        int first = y[0];
-        for (int val : y) {
-            if (val != first) return false;
-        }
+        for (int i = 1; i < y.length; i++)
+            if (y[i] != y[0]) return false;
         return true;
     }
 
-    /** Helper: return majority class in y */
     private int majorityClass(int[] y) {
-        HashMap<Integer, Integer> counts = new HashMap<>();
-        for (int val : y) {
-            counts.put(val, counts.getOrDefault(val, 0) + 1);
+        Map<Integer, Integer> counts = new HashMap<>();
+        for (int v : y) counts.put(v, counts.getOrDefault(v, 0) + 1);
+        return counts.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .get().getKey();
+    }
+
+    private double giniForAttribute(int[][] X, int[] y, int attr) {
+        Map<Integer, Map<Integer, Integer>> valueCounts = new HashMap<>();
+        for (int i = 0; i < X.length; i++) {
+            int val = X[i][attr];
+            valueCounts.putIfAbsent(val, new HashMap<>());
+            Map<Integer, Integer> counts = valueCounts.get(val);
+            counts.put(y[i], counts.getOrDefault(y[i], 0) + 1);
         }
-        int majority = y[0];
-        int max = 0;
-        for (int k : counts.keySet()) {
-            if (counts.get(k) > max) {
-                max = counts.get(k);
-                majority = k;
+
+        double total = X.length;
+        double gini = 0.0;
+        for (Map<Integer, Integer> counts : valueCounts.values()) {
+            int sum = counts.values().stream().mapToInt(Integer::intValue).sum();
+            double score = 1.0;
+            for (int c : counts.values()) {
+                double p = (double) c / sum;
+                score -= p * p;
             }
+            gini += sum / total * score;
         }
-        return majority;
+        return gini;
     }
 }
-
