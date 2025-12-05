@@ -4,7 +4,7 @@ import json
 from time import sleep
 from typing import List
 
-RELEVANT_FORMATS = ["ZU", "PU", "NU", "RU", "NU", "OU", "Uber", "AG"]
+RELEVANT_FORMATS = ["ZU", "PU", "NU", "RU", "UU", "OU", "Uber", "AG"]
 
 def getAllStandardMons() -> List[str]:
     with open('src/main/resources/smogonData/pokemonData.json', 'r') as f:
