@@ -41,7 +41,6 @@ public class Main {
         List<Integer> trainIndices = new ArrayList<>();
         for (int i = 0; i < Xtrain.length; i++) trainIndices.add(i);
         Collections.shuffle(trainIndices, new Random(42));
-
         int foldSize = Xtrain.length / kFolds;
 
         for (int nTrees : treeOptions) {
@@ -81,12 +80,20 @@ public class Main {
             System.out.printf("Trees: %d | 10-fold CV Accuracy: %.4f%n", nTrees, avgAccuracy.get(nTrees));
         }
 
+        // Print all accuracies for debugging
+        System.out.println("\nAll tree options and their average CV accuracies:");
+        for (Entry<Integer, Double> entry : avgAccuracy.entrySet()) {
+            System.out.printf("%d trees -> Avg CV Accuracy: %.4f%n", entry.getKey(), entry.getValue());
+        }
+
         // Best number of trees
         int bestTrees = avgAccuracy.entrySet().stream()
                 .max(Entry.comparingByValue())
                 .get()
                 .getKey();
+        double bestAcc = avgAccuracy.get(bestTrees);
         System.out.println("\nBest number of trees: " + bestTrees);
+        System.out.println("Best 10-fold CV Accuracy: " + bestAcc);
 
         // 6. Train final RandomForest on all training data
         RandomForest finalRF = new RandomForest(bestTrees, maxDepth, minSamplesSplit);
