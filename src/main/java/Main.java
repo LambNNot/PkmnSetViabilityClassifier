@@ -32,75 +32,82 @@ public class Main {
         int[][] Xtest = Arrays.copyOfRange(Xshuffled, trainSize, X.length);
         int[] ytest = Arrays.copyOfRange(yshuffled, trainSize, y.length);
 
-        // 5. 10-fold CV to select best number of trees
-        int[] treeOptions = {50, 100, 200, 300};
-        int kFolds = 10, maxDepth = 20, minSamplesSplit = 5;
-        Map<Integer, Double> avgAccuracy = new HashMap<>();
+        // 5. 10-fold CV to select best hyperparameters
+        int[] treeOptions = {150, 200, 250};
+        int[] depthOptions = {5, 10, 15, 20};
+        int[] minSplitOptions = {1, 3, 5};
+        int kFolds = 10;
 
-        // Generate shuffled indices for CV on training set
+        Map<String, Double> avgAccuracy = new HashMap<>();
         List<Integer> trainIndices = new ArrayList<>();
         for (int i = 0; i < Xtrain.length; i++) trainIndices.add(i);
         Collections.shuffle(trainIndices, new Random(42));
         int foldSize = Xtrain.length / kFolds;
 
+        String bestConfig = "";
+        double bestAcc = 0.0;
+
         for (int nTrees : treeOptions) {
-            double totalAcc = 0.0;
+            for (int maxDepth : depthOptions) {
+                for (int minSamplesSplit : minSplitOptions) {
+                    double totalAcc = 0.0;
 
-            for (int fold = 0; fold < kFolds; fold++) {
-                List<Integer> testIdx = trainIndices.subList(fold * foldSize,
-                        fold == kFolds - 1 ? Xtrain.length : (fold + 1) * foldSize);
-                List<Integer> cvTrainIdx = new ArrayList<>(trainIndices);
-                cvTrainIdx.removeAll(testIdx);
+                    for (int fold = 0; fold < kFolds; fold++) {
+                        List<Integer> testIdx = trainIndices.subList(fold * foldSize,
+                                fold == kFolds - 1 ? Xtrain.length : (fold + 1) * foldSize);
+                        List<Integer> cvTrainIdx = new ArrayList<>(trainIndices);
+                        cvTrainIdx.removeAll(testIdx);
 
-                int[][] XcvTrain = new int[cvTrainIdx.size()][Xtrain[0].length];
-                int[] ycvTrain = new int[cvTrainIdx.size()];
-                int[][] XcvTest = new int[testIdx.size()][Xtrain[0].length];
-                int[] ycvTest = new int[testIdx.size()];
+                        int[][] XcvTrain = new int[cvTrainIdx.size()][Xtrain[0].length];
+                        int[] ycvTrain = new int[cvTrainIdx.size()];
+                        int[][] XcvTest = new int[testIdx.size()][Xtrain[0].length];
+                        int[] ycvTest = new int[testIdx.size()];
 
-                for (int i = 0; i < cvTrainIdx.size(); i++) {
-                    XcvTrain[i] = Xtrain[cvTrainIdx.get(i)];
-                    ycvTrain[i] = ytrain[cvTrainIdx.get(i)];
+                        for (int i = 0; i < cvTrainIdx.size(); i++) {
+                            XcvTrain[i] = Xtrain[cvTrainIdx.get(i)];
+                            ycvTrain[i] = ytrain[cvTrainIdx.get(i)];
+                        }
+                        for (int i = 0; i < testIdx.size(); i++) {
+                            XcvTest[i] = Xtrain[testIdx.get(i)];
+                            ycvTest[i] = ytrain[testIdx.get(i)];
+                        }
+
+                        RandomForest rf = new RandomForest(nTrees, maxDepth, minSamplesSplit);
+                        rf.fit(XcvTrain, ycvTrain);
+
+                        int correct = 0;
+                        for (int i = 0; i < XcvTest.length; i++)
+                            if (rf.predict(XcvTest[i]) == ycvTest[i]) correct++;
+
+                        totalAcc += correct / (double) XcvTest.length;
+                    }
+
+                    double avgAcc = totalAcc / kFolds;
+                    String config = "Trees=" + nTrees + ", Depth=" + maxDepth + ", MinSplit=" + minSamplesSplit;
+                    avgAccuracy.put(config, avgAcc);
+                    System.out.printf("%s | 10-fold CV Accuracy: %.4f%n", config, avgAcc);
+
+                    if (avgAcc > bestAcc) {
+                        bestAcc = avgAcc;
+                        bestConfig = config;
+                    }
                 }
-                for (int i = 0; i < testIdx.size(); i++) {
-                    XcvTest[i] = Xtrain[testIdx.get(i)];
-                    ycvTest[i] = ytrain[testIdx.get(i)];
-                }
-
-                RandomForest rf = new RandomForest(nTrees, maxDepth, minSamplesSplit);
-                rf.fit(XcvTrain, ycvTrain);
-
-                int correct = 0;
-                for (int i = 0; i < XcvTest.length; i++)
-                    if (rf.predict(XcvTest[i]) == ycvTest[i]) correct++;
-
-                totalAcc += correct / (double) XcvTest.length;
             }
-
-            avgAccuracy.put(nTrees, totalAcc / kFolds);
-            System.out.printf("Trees: %d | 10-fold CV Accuracy: %.4f%n", nTrees, avgAccuracy.get(nTrees));
         }
 
-        // Print all accuracies for debugging
-        System.out.println("\nAll tree options and their average CV accuracies:");
-        for (Entry<Integer, Double> entry : avgAccuracy.entrySet()) {
-            System.out.printf("%d trees -> Avg CV Accuracy: %.4f%n", entry.getKey(), entry.getValue());
-        }
+        System.out.println("\nBest configuration: " + bestConfig + " | Accuracy: " + bestAcc);
 
-        // Best number of trees
-        int bestTrees = avgAccuracy.entrySet().stream()
-                .max(Entry.comparingByValue())
-                .get()
-                .getKey();
-        double bestAcc = avgAccuracy.get(bestTrees);
-        System.out.println("\nBest number of trees: " + bestTrees);
-        System.out.println("Best 10-fold CV Accuracy: " + bestAcc);
+        // Parse best config and train final model
+        String[] parts = bestConfig.split(",");
+        int bestTrees = Integer.parseInt(parts[0].split("=")[1]);
+        int bestDepth = Integer.parseInt(parts[1].split("=")[1]);
+        int bestMinSplit = Integer.parseInt(parts[2].split("=")[1]);
 
-        // 6. Train final RandomForest on all training data
-        RandomForest finalRF = new RandomForest(bestTrees, maxDepth, minSamplesSplit);
+        RandomForest finalRF = new RandomForest(bestTrees, bestDepth, bestMinSplit);
         finalRF.fit(Xtrain, ytrain);
         System.out.println("Final model trained on all training data.");
 
-        // 7. Evaluate on test set
+        // 6. Evaluate on test set
         int numClasses = CSVLoader.reverseLabelMap.size();
         int[][] confusion = new int[numClasses][numClasses];
 
@@ -132,7 +139,7 @@ public class Main {
                     CSVLoader.reverseLabelMap.get(c), precision, recall, f1);
         }
 
-        // 8. Sample predictions
+        // 7. Sample predictions
         System.out.println("\nSample test set predictions:");
         for (int i = 0; i < Math.min(5, Xtest.length); i++) {
             int pred = finalRF.predict(Xtest[i]);
