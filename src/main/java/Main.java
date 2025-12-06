@@ -1,5 +1,10 @@
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -32,7 +37,7 @@ public class Main {
         int[][] Xtest = Arrays.copyOfRange(Xshuffled, trainSize, X.length);
         int[] ytest = Arrays.copyOfRange(yshuffled, trainSize, y.length);
 
-        // 5. 10-fold CV to select best hyperparameters
+        // 5. 10-fold CV to select hyperparameters
         int[] treeOptions = {150, 200, 250};
         int[] depthOptions = {5, 10, 15, 20};
         int[] minSplitOptions = {1, 3, 5};
@@ -82,13 +87,13 @@ public class Main {
                         totalAcc += correct / (double) XcvTest.length;
                     }
 
-                    double avgAcc = totalAcc / kFolds;
+                    double avgAccVal = totalAcc / kFolds;
                     String config = "Trees=" + nTrees + ", Depth=" + maxDepth + ", MinSplit=" + minSamplesSplit;
-                    avgAccuracy.put(config, avgAcc);
-                    System.out.printf("%s | 10-fold CV Accuracy: %.4f%n", config, avgAcc);
+                    avgAccuracy.put(config, avgAccVal);
+                    System.out.printf("%s | 10-fold CV Accuracy: %.4f%n", config, avgAccVal);
 
-                    if (avgAcc > bestAcc) {
-                        bestAcc = avgAcc;
+                    if (avgAccVal > bestAcc) {
+                        bestAcc = avgAccVal;
                         bestConfig = config;
                     }
                 }
@@ -97,7 +102,7 @@ public class Main {
 
         System.out.println("\nBest configuration: " + bestConfig + " | Accuracy: " + bestAcc);
 
-        // Parse best config and train final model
+        // Parse best config
         String[] parts = bestConfig.split(",");
         int bestTrees = Integer.parseInt(parts[0].split("=")[1]);
         int bestDepth = Integer.parseInt(parts[1].split("=")[1]);
@@ -107,6 +112,31 @@ public class Main {
         finalRF.fit(Xtrain, ytrain);
         System.out.println("Final model trained on all training data.");
 
+        // PRINT FIRST DECISION TREE 
+        System.out.println("\n=== Printing First Decision Tree ===");
+        DecisionTreeNode firstTree = finalRF.getTrees().get(0);
+        RandomForest.printTree(firstTree, "", CSVLoader.reverseLabelMap);
+
+        // FEATURE IMPORTANCE (RAW) 
+        System.out.println("\n=== FEATURE IMPORTANCE (Depth Weighted) ===");
+        Map<Integer, Double> importance = finalRF.computeFeatureImportance();
+
+        importance.entrySet().stream()
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .forEach(e -> {
+                    System.out.println("Attribute " + e.getKey() + " importance = " + e.getValue());
+                });
+
+        // NORMALIZED FEATURE IMPORTANCE 
+        System.out.println("\n=== NORMALIZED FEATURE IMPORTANCE (0–1 scale) ===");
+        Map<Integer, Double> norm = finalRF.computeNormalizedFeatureImportance();
+
+        norm.entrySet().stream()
+                .sorted((a, b) -> Double.compare(b.getValue(), a.getValue()))
+                .forEach(e -> {
+                    System.out.printf("Attribute %d normalized = %.6f%n", 
+                        e.getKey(), e.getValue());
+                });
         // 6. Evaluate on test set
         int numClasses = CSVLoader.reverseLabelMap.size();
         int[][] confusion = new int[numClasses][numClasses];
@@ -156,6 +186,3 @@ public class Main {
         return CSVLoader.reverseLabelMap.get(pred);
     }
 }
-
-
-
