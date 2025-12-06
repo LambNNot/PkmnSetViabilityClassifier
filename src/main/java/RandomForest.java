@@ -73,8 +73,9 @@ public class RandomForest {
         if (bestGini == 0) return new DecisionTreeNode(majorityClass(y));
 
         Map<Integer, List<Integer>> groups = new HashMap<>();
-        for (int i = 0; i < X.length; i++)
+        for (int i = 0; i < X.length; i++) {
             groups.computeIfAbsent(X[i][bestAttr], k -> new ArrayList<>()).add(i);
+        }
 
         Map<Integer, DecisionTreeNode> children = new HashMap<>();
         for (Map.Entry<Integer, List<Integer>> entry : groups.entrySet()) {
@@ -123,10 +124,57 @@ public class RandomForest {
             }
             gini += sum / total * score;
         }
+
         return gini;
     }
 
-    public List<DecisionTreeNode> getTrees() { return trees; }
+
+ 
+    // FEATURE IMPORTANCE
+
+
+    public Map<Integer, Double> computeFeatureImportance() {
+        Map<Integer, Double> importance = new HashMap<>();
+
+        for (DecisionTreeNode tree : trees) {
+            accumulateImportance(tree, 0, importance);
+        }
+
+        return importance;
+    }
+
+    private void accumulateImportance(DecisionTreeNode node, int depth, Map<Integer, Double> importance) {
+        if (node == null || node.isLeaf()) return;
+
+        double weight = 1.0 / (depth + 1);
+
+        importance.put(
+            node.getAttribute(),
+            importance.getOrDefault(node.getAttribute(), 0.0) + weight
+        );
+
+        for (DecisionTreeNode child : node.getChildren().values()) {
+            accumulateImportance(child, depth + 1, importance);
+        }
+    }
+
+    public Map<Integer, Double> computeNormalizedFeatureImportance() {
+        Map<Integer, Double> raw = computeFeatureImportance();
+        Map<Integer, Double> normalized = new HashMap<>();
+
+        double total = raw.values().stream().mapToDouble(Double::doubleValue).sum();
+
+        for (Map.Entry<Integer, Double> entry : raw.entrySet()) {
+            normalized.put(entry.getKey(), entry.getValue() / total);
+        }
+
+        return normalized;
+    }
+
+
+    public List<DecisionTreeNode> getTrees() { 
+        return trees; 
+    }
 
     public static void printTree(DecisionTreeNode node, String indent, Map<Integer, String> labelMap) {
         if (node == null) return;
@@ -142,5 +190,3 @@ public class RandomForest {
         }
     }
 }
-
-
